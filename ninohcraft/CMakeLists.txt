@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(NinohCraft3D LANGUAGES CXX)
+project(NinohCraft3D LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,5 +15,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(raylib)
 
-add_executable(ninohcraft src/main.cpp)
-target_link_libraries(ninohcraft PRIVATE raylib)
+if(ANDROID)
+    add_library(ninohcraft SHARED src/main.cpp)
+    target_link_libraries(ninohcraft PRIVATE raylib android log EGL GLESv2 OpenSLES dl)
+else()
+    add_executable(ninohcraft src/main.cpp)
+    target_link_libraries(ninohcraft PRIVATE raylib)
+endif()
