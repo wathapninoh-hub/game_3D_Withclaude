@@ -8,10 +8,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(FetchContent)
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
+
+# Use Git checkout instead of URL archive: Android's ExternalProject
+# was treating the URL archive entry as an invalid path list.
 FetchContent_Declare(
     raylib
-    URL https://github.com/raysan5/raylib/archive/refs/tags/5.5.tar.gz
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    GIT_REPOSITORY https://github.com/raysan5/raylib.git
+    GIT_TAG 5.5
+    GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(raylib)
 
