@@ -1,0 +1,10 @@
+{
+  "name": "Bus Simulator Madagascar 3D",
+  "short_name": "Bus Mada 3D",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#101923",
+  "theme_color": "#101923",
+  "icons": []
+}
