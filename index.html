@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="mg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101923">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>Bus Simulator Madagascar 3D</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101923;color:#fff;font-family:system-ui,Arial;touch-action:none}
+#game{position:fixed;inset:0}canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none}
+.top{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.panel{background:#07111dcc;border:1px solid #ffffff25;border-radius:12px;padding:9px 12px;backdrop-filter:blur(8px);font-size:12px}
+#speed{font-size:25px;font-weight:800}#speed small{font-size:11px;font-weight:500}
+#help{position:absolute;left:50%;top:12px;transform:translateX(-50%);text-align:center}
+.controls{position:absolute;bottom:18px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:end}
+.cluster{display:flex;gap:10px;align-items:end}
+.ctrl{pointer-events:auto;border:1px solid #ffffff55;background:#07111dcc;color:white;border-radius:50%;width:68px;height:68px;font-size:23px;font-weight:700;touch-action:none;user-select:none}
+.ctrl:active,.ctrl.down{background:#168bce}
+.ctrl.small{width:54px;height:54px;font-size:15px}
+#start{pointer-events:auto;position:absolute;inset:0;background:linear-gradient(#07111d99,#07111ddd);display:grid;place-items:center;text-align:center;padding:24px}
+.startbox{max-width:440px;background:#101e2beF;border:1px solid #ffffff2b;border-radius:20px;padding:24px;box-shadow:0 15px 60px #0009}
+#start h1{font-size:clamp(24px,6vw,38px);margin:0 0 8px}#start p{color:#c4d2df;line-height:1.5}
+#play{border:0;border-radius:12px;padding:14px 30px;background:#168bce;color:white;font-weight:800;font-size:17px}
+#loading{height:8px;background:#ffffff22;border-radius:9px;overflow:hidden;margin:14px 0 5px}#bar{height:100%;width:0;background:#31c48d}
+#status{font-size:12px;color:#b8c8d6}
+@media(orientation:portrait){#help:after{content:" • Ahodino mitsivalana ny téléphone";color:#ffd166}}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="hud">
+ <div class="top">
+  <div class="panel"><div id="speed">0 <small>km/h</small></div><div>BUS SIMULATOR • MADAGASCAR</div></div>
+  <div class="panel" id="help">W / ↑ accélérer • S / ↓ freiner</div>
+  <div class="panel"><div id="gear">D</div><div id="distance">0.00 km</div></div>
+ </div>
+ <div class="controls">
+  <div class="cluster"><button class="ctrl" data-key="left">◀</button><button class="ctrl" data-key="right">▶</button></div>
+  <div class="cluster"><button class="ctrl small" data-key="brake">FREIN</button><button class="ctrl" data-key="gas">▲</button></div>
+ </div>
+</div>
+<div id="start"><div class="startbox">
+ <h1>🚌 BUS SIMULATOR<br>MADAGASCAR 3D</h1>
+ <p>Prototype 3D voalohany. Mandehana amin'ny lalana Malagasy, andramo ny familiana sy ny frein. Ampiasao amin'ny écran mitsivalana.</p>
+ <div id="loading"><div id="bar"></div></div><div id="status">Miomana ny moteur 3D…</div><br>
+ <button id="play">HANOMBOKA MILALAO</button>
+ <p style="font-size:11px">Mila connexion internet amin'ny famoahana voalohany ny moteur 3D.</p>
+ </div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const status=document.querySelector('#status'),bar=document.querySelector('#bar');
+bar.style.width='100%';status.textContent='Moteur 3D voaray • Manangana tontolo…';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x8bc8ed);scene.fog=new THREE.Fog(0x8bc8ed,90,420);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,1000);camera.position.set(0,5,11);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;document.querySelector('#game').appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdaf1ff,0x657447,2));
+const sun=new THREE.DirectionalLight(0xfff0d2,2.5);sun.position.set(-35,60,25);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+const mat=(color,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness});
+const green=mat(0x65834c),darkGreen=mat(0x355b38),roadMat=mat(0x30343a),lineMat=mat(0xf4e7b5),red=mat(0xc62828),glass=new THREE.MeshStandardMaterial({color:0x8fc6db,metalness:.25,roughness:.18}),rubber=mat(0x17191b),white=mat(0xf0eee6);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(1000,1000),green);ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;scene.add(ground);
+const road=new THREE.Mesh(new THREE.PlaneGeometry(12,1000),roadMat);road.rotation.x=-Math.PI/2;road.position.set(0,0,-420);road.receiveShadow=true;scene.add(road);
+for(let z=-900;z<100;z+=18){const dash=new THREE.Mesh(new THREE.BoxGeometry(.18,.035,8),lineMat);dash.position.set(0,.025,z);scene.add(dash)}
+// Distant hills
+for(let i=0;i<24;i++){const hill=new THREE.Mesh(new THREE.ConeGeometry(18+Math.random()*24,25+Math.random()*35,6),i%2?darkGreen:green);hill.position.set((i%2?1:-1)*(35+Math.random()*95),8,-i*42-35);hill.rotation.y=Math.random()*2;scene.add(hill)}
+// roadside trees and Malagasy-style houses
+function tree(x,z,s=1){const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.35*s,2.4*s,7),mat(0x795235));trunk.position.y=1.2*s;g.add(trunk);const crown=new THREE.Mesh(new THREE.SphereGeometry(1.5*s,8,7),iMat());crown.position.y=3*s;g.add(crown);g.position.set(x,0,z);scene.add(g)}
+function iMat(){return Math.random()>.5?mat(0x376d3b):mat(0x4e7c3e)}
+function house(x,z){const g=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(5,3.2,4),mat(0xc9a77a));base.position.y=1.6;g.add(base);const roof=new THREE.Mesh(new THREE.ConeGeometry(3.8,2.4,4),mat(0x8a3e2e));roof.rotation.y=Math.PI/4;roof.position.y=4.3;g.add(roof);g.position.set(x,0,z);scene.add(g)}
+for(let z=-880;z<80;z+=28){tree(-11-Math.random()*9,z,0.8+Math.random()*.6);tree(11+Math.random()*10,z-12,.8+Math.random()*.6);if(Math.random()>.5)house((Math.random()>.5?1:-1)*(20+Math.random()*16),z-8)}
+// Procedural coach bus, built from meshes for this first playable version
+const bus=new THREE.Group();scene.add(bus);
+function box(parent,w,h,d,material,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+box(bus,3.15,3.25,8.2,white,0,2.15,0);box(bus,3.2,.5,8.25,red,0,.72,0);box(bus,3.12,.25,8.15,red,0,3.65,0);
+box(bus,2.9,1.35,6.6,glass,0,2.55,-.15);
+box(bus,2.85,1.45,.12,glass,0,2.55,4.12);
+box(bus,2.85,1.3,.12,glass,0,2.5,-4.12);
+box(bus,1.05,.85,.12,mat(0xfff0c2),-.95,1.45,4.18);box(bus,1.05,.85,.12,mat(0xfff0c2),.95,1.45,4.18);
+const wheels=[];for(const x of [-1.62,1.62])for(const z of [-2.65,2.65]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.62,.62,.34,16),rubber);w.rotation.z=Math.PI/2;w.position.set(x,.68,z);w.castShadow=true;bus.add(w);wheels.push(w);const hub=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.36,12),mat(0x9ba4aa));hub.rotation.z=Math.PI/2;hub.position.copy(w.position);bus.add(hub)}
+bus.position.set(0,0,3.5);
+const clock=new THREE.Clock();const keys={};let speed=0,steer=0,distance=0,started=false;
+function setKey(k,v){keys[k]=v}
+document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();setKey(k,true);b.classList.add('down')});for(const ev of ['pointerup','pointercancel','pointerleave'])b.addEventListener(ev,()=>{setKey(k,false);b.classList.remove('down')})});
+addEventListener('keydown',e=>{if(['ArrowUp','w','W'].includes(e.key))keys.gas=true;if(['ArrowDown','s','S',' '].includes(e.key))keys.brake=true;if(['ArrowLeft','a','A'].includes(e.key))keys.left=true;if(['ArrowRight','d','D'].includes(e.key))keys.right=true});
+addEventListener('keyup',e=>{if(['ArrowUp','w','W'].includes(e.key))keys.gas=false;if(['ArrowDown','s','S',' '].includes(e.key))keys.brake=false;if(['ArrowLeft','a','A'].includes(e.key))keys.left=false;if(['ArrowRight','d','D'].includes(e.key))keys.right=false});
+document.querySelector('#play').addEventListener('click',async()=>{try{if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape')}catch(e){};started=true;document.querySelector('#start').style.display='none';clock.start()});
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(started){if(keys.gas)speed=Math.min(34,speed+11*dt);else speed=Math.max(0,speed-2.1*dt);if(keys.brake)speed=Math.max(0,speed-24*dt);const target=(keys.left?1:0)-(keys.right?1:0);steer=THREE.MathUtils.lerp(steer,target,Math.min(1,dt*5));bus.rotation.y=-steer*.24*(speed/34);bus.position.x=THREE.MathUtils.clamp(bus.position.x+steer*speed*.055*dt,-4.1,4.1);distance+=speed*dt/3600;document.querySelector('#speed').innerHTML=Math.round(speed*3.6)+' <small>km/h</small>';document.querySelector('#distance').textContent=distance.toFixed(2)+' km';for(const w of wheels)w.rotation.x-=speed*dt*.55;road.position.z+=speed*dt;if(road.position.z>0)road.position.z=-420;for(const child of scene.children){if(child.position?.z!==undefined&&child.userData.moving)child.position.z+=speed*dt;if(child.position?.z>30)child.position.z-=900}camera.position.x=THREE.MathUtils.lerp(camera.position.x,bus.position.x*.45,dt*2);camera.lookAt(bus.position.x*.25,1.8,-8)}renderer.render(scene,camera)}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body></html>
